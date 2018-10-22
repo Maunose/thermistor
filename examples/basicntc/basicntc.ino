@@ -57,7 +57,7 @@ void loop()
 {
   temp = thermistor.read();   // Read temperature
 
-  Serial.print("Temp in 1/10 ºC : ");
+  Serial.print("Temp in 1/100 ºC : ");
   Serial.println(temp);
 
   delay(5000);
