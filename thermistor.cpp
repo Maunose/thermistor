@@ -34,20 +34,16 @@
  */
 
 #include "thermistor.h"
-#include "HardwareSerial.h"
+
 // Temperature for nominal resistance (almost always 25 C)
 #define TEMPERATURENOMINAL 25
 
 // Number of ADC samples
-#define NUMSAMPLES         5 
+#define NUMSAMPLES         5
 
 // ADC resolution
-#ifdef PANSTAMP_NRG
-#define ADC_RESOLUTION 0xFFF
-#else
 #define ADC_RESOLUTION 1023
-#endif
-#define VERBOSE_SENSOR_ENABLED 1
+
 /**
  * THERMISTOR
  * 
@@ -71,7 +67,7 @@ THERMISTOR::THERMISTOR(uint8_t adcPin, uint16_t nomRes, uint16_t bCoef, uint16_t
  *
  * Read temperature from thermistor
  *
- * @return temperature in 0.1 ºC
+ * @return temperature in 0.01 ºC
  */
 int THERMISTOR::read(void)
 {
@@ -89,39 +85,18 @@ int THERMISTOR::read(void)
     delay(10);
   }
   average /= NUMSAMPLES;
-
-  #ifdef VERBOSE_SENSOR_ENABLED  
-  Serial.print("Average analog reading "); 
-  Serial.println(average);
-  #endif
  
   // convert the value to resistance
   average = ADC_RESOLUTION / average - 1;
-  average = serialResistance * average;
-
-  #ifdef VERBOSE_SENSOR_ENABLED
-  Serial.print("Thermistor resistance "); 
-  Serial.println(average);
-  #endif
+  average *= serialResistance;
  
   float steinhart;
   steinhart = average / nominalResistance;     // (R/Ro)
-  #ifdef PANSTAMP_NRG
-  steinhart = logf(steinhart);                 // ln(R/Ro)
-  #else
   steinhart = log(steinhart);                  // ln(R/Ro)
-  #endif
   steinhart /= bCoefficient;                   // 1/B * ln(R/Ro)
   steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
   steinhart = 1.0 / steinhart;                 // Invert
   steinhart -= 273.15;                         // convert to C
- 
-  #ifdef VERBOSE_SENSOR_ENABLED
-  Serial.print("Temperature "); 
-  Serial.print(steinhart);
-  Serial.println(" *C");
-  #endif
   
-  return (int)(steinhart * 10);
+  return (int)(steinhart * 100);
 }
-
